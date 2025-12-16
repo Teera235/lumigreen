@@ -120,7 +120,7 @@ export default function LivePage() {
 
       {/* Footer */}
       <div className="text-center text-gray-400 text-xs">
-        ESP32 + Blynk IoT • Real-time
+        Teerathap love JaiJook • Real-time
       </div>
     </div>
   );
