@@ -20,6 +20,7 @@ export default function Navbar() {
     { href: "#home", label: "หน้าแรก" },
     { href: "#innovation", label: "นวัตกรรม" },
     { href: "/live", label: "🔴 Live", isLive: true },
+    { href: "/sandbox", label: "📊 Sandbox", isSandbox: true },
     { href: "#product", label: "สินค้า" },
     { href: "#impact", label: "ผลลัพธ์" },
     { href: "#calculator", label: "คำนวณ ROI" },
@@ -66,6 +67,14 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   className="px-4 py-2 bg-red-500 text-white rounded-full font-medium text-sm hover:bg-red-600 transition-colors"
+                >
+                  {link.label}
+                </a>
+              ) : link.isSandbox ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="px-4 py-2 bg-gray-800 text-emerald-400 rounded-full font-medium text-sm hover:bg-gray-700 transition-colors"
                 >
                   {link.label}
                 </a>
@@ -134,6 +143,15 @@ export default function Navbar() {
                       key={link.href}
                       href={link.href}
                       className="block py-3 px-4 bg-red-500 text-white rounded-xl font-medium text-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {link.label}
+                    </a>
+                  ) : link.isSandbox ? (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="block py-3 px-4 bg-gray-800 text-emerald-400 rounded-xl font-medium text-center"
                       onClick={() => setIsOpen(false)}
                     >
                       {link.label}
