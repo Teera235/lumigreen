@@ -19,7 +19,7 @@ export default function Navbar() {
   const navLinks = [
     { href: "#home", label: "หน้าแรก" },
     { href: "#innovation", label: "นวัตกรรม" },
-    { href: "#live", label: "Live Monitor" },
+    { href: "/live", label: "🔴 Live", isLive: true },
     { href: "#product", label: "สินค้า" },
     { href: "#impact", label: "ผลลัพธ์" },
     { href: "#calculator", label: "คำนวณ ROI" },
@@ -61,22 +61,32 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link, index) => (
-              <motion.a
-                key={link.href}
-                href={link.href}
-                className="relative px-4 py-2 text-gray-600 hover:text-emerald-600 transition-colors font-medium text-sm"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-              >
-                {link.label}
-                <motion.span
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full"
-                  whileHover={{ width: "60%" }}
-                  transition={{ duration: 0.2 }}
-                />
-              </motion.a>
+              link.isLive ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="px-4 py-2 bg-red-500 text-white rounded-full font-medium text-sm hover:bg-red-600 transition-colors"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <motion.a
+                  key={link.href}
+                  href={link.href}
+                  className="relative px-4 py-2 text-gray-600 hover:text-emerald-600 transition-colors font-medium text-sm"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  {link.label}
+                  <motion.span
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full"
+                    whileHover={{ width: "60%" }}
+                    transition={{ duration: 0.2 }}
+                  />
+                </motion.a>
+              )
             ))}
             <motion.a
               href="#contact"
@@ -119,17 +129,28 @@ export default function Navbar() {
             >
               <div className="space-y-2">
                 {navLinks.map((link, index) => (
-                  <motion.a
-                    key={link.href}
-                    href={link.href}
-                    className="block py-3 px-4 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors font-medium"
-                    onClick={() => setIsOpen(false)}
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    {link.label}
-                  </motion.a>
+                  link.isLive ? (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="block py-3 px-4 bg-red-500 text-white rounded-xl font-medium text-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <motion.a
+                      key={link.href}
+                      href={link.href}
+                      className="block py-3 px-4 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors font-medium"
+                      onClick={() => setIsOpen(false)}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      {link.label}
+                    </motion.a>
+                  )
                 ))}
                 <motion.a
                   href="#contact"
