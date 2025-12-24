@@ -1,24 +1,22 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Environment, ContactShadows } from "@react-three/drei";
+import { OrbitControls, ContactShadows } from "@react-three/drei";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { useLoader } from "@react-three/fiber";
 import { Zap, Leaf, ArrowLeft, DollarSign, TrendingDown, Sun } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import * as THREE from "three";
 
-// ข้อมูลห้อง Sandbox
 const ROOM_SIZE = 16;
-const OLD_POWER = 100;
+const OLD_POWER = 120;
 const NEW_LED_POWER = 30;
 const LIGHTPIPE_CONTRIBUTION = 0.6;
-const HOURS_PER_DAY = 10;
+const HOURS_PER_DAY = 16;
 const DAYS_PER_YEAR = 260;
-const ELEC_RATE = 4.5;
-const EF = 0.4682;
+const ELEC_RATE = 4.2;
+const EF = 0.4999;
 
 const OLD_ENERGY_KWH = (OLD_POWER * HOURS_PER_DAY * DAYS_PER_YEAR) / 1000;
 const AVG_LED_USAGE = NEW_LED_POWER * (1 - LIGHTPIPE_CONTRIBUTION * 0.7);
@@ -29,46 +27,71 @@ const OLD_CO2 = OLD_ENERGY_KWH * EF;
 const NEW_CO2 = NEW_ENERGY_KWH * EF;
 const SAVED_CO2 = OLD_CO2 - NEW_CO2;
 
-function RoomModel({ lightIntensity }: { lightIntensity: number }) {
-  const materials = useLoader(MTLLoader, "/models/low poly room.mtl");
-  const obj = useLoader(OBJLoader, "/models/low poly room.obj", (loader) => {
-    materials.preload();
-    loader.setMaterials(materials);
-  });
+// สีสำหรับแต่ละส่วน
+const materialColors: { [key: string]: string } = {
+  room: "#f5f5dc",      // ผนัง - สีครีม
+  chair: "#8b4513",     // เก้าอี้ - สีน้ำตาล
+  table: "#deb887",     // โต๊ะ - สีไม้
+  bed: "#4169e1",       // เตียง - สีน้ำเงิน
+  cushion: "#ff6b6b",   // หมอน - สีแดง
+  borders: "#2f4f4f",   // ขอบ - สีเทาเข้ม
+  book: "#228b22",      // หนังสือ - สีเขียว
+  painting_1: "#ffd700", // รูปภาพ - สีทอง
+  painting_2: "#ff69b4", // รูปภาพ - สีชมพู
+};
+
+function RoomModel() {
+  const obj = useLoader(OBJLoader, "/models/low poly room.obj");
+  const groupRef = useRef<THREE.Group>(null);
+
+  useEffect(() => {
+    obj.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const materialName = child.material?.name || "";
+        const color = materialColors[materialName] || "#cccccc";
+        child.material = new THREE.MeshStandardMaterial({
+          color: color,
+          roughness: 0.7,
+          metalness: 0.1,
+        });
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+  }, [obj]);
 
   return (
     <primitive 
+      ref={groupRef}
       object={obj} 
-      scale={0.08} 
-      position={[0, -2, 0]} 
-      rotation={[0, Math.PI / 4, 0]}
+      scale={0.6} 
+      position={[0, -3, 0]} 
+      rotation={[-Math.PI / 2, 0, 0]}
     />
   );
 }
 
 function LightPipe({ intensity }: { intensity: number }) {
   return (
-    <group position={[0, 3, 0]}>
-      {/* Light pipe tube */}
+    <group position={[0, 2, 0]}>
       <mesh>
-        <cylinderGeometry args={[0.5, 0.6, 0.8, 32]} />
-        <meshStandardMaterial color="#e5e7eb" metalness={0.8} roughness={0.2} />
+        <cylinderGeometry args={[0.8, 1, 1.2, 32]} />
+        <meshStandardMaterial color="#e5e7eb" metalness={0.9} roughness={0.1} />
       </mesh>
-      {/* Light glow */}
       <pointLight 
-        position={[0, -0.5, 0]} 
-        intensity={intensity * 5} 
+        position={[0, -1, 0]} 
+        intensity={intensity * 10} 
         color="#fef08a" 
-        distance={8}
+        distance={15}
+        castShadow
       />
-      {/* Light cone */}
       {intensity > 0.3 && (
-        <mesh position={[0, -1.5, 0]}>
-          <coneGeometry args={[2.5, 3, 32, 1, true]} />
+        <mesh position={[0, -2, 0]}>
+          <coneGeometry args={[3, 3, 32, 1, true]} />
           <meshBasicMaterial 
             color="#fef08a" 
             transparent 
-            opacity={intensity * 0.25} 
+            opacity={intensity * 0.3} 
             side={THREE.DoubleSide}
           />
         </mesh>
@@ -80,27 +103,35 @@ function LightPipe({ intensity }: { intensity: number }) {
 function Scene({ isDay, lightIntensity }: { isDay: boolean; lightIntensity: number }) {
   return (
     <>
-      <ambientLight intensity={isDay ? 0.5 : 0.1} />
+      <ambientLight intensity={isDay ? 0.6 : 0.2} />
       <directionalLight 
-        position={[5, 5, 5]} 
-        intensity={isDay ? lightIntensity : 0} 
-        color="#fef08a"
+        position={[10, 10, 5]} 
+        intensity={isDay ? lightIntensity * 1.5 : 0.3} 
+        color={isDay ? "#fef08a" : "#94a3b8"}
         castShadow
+        shadow-mapSize={[1024, 1024]}
       />
+      <hemisphereLight intensity={0.3} color="#87ceeb" groundColor="#f5f5dc" />
       
-      <Suspense fallback={null}>
-        <RoomModel lightIntensity={lightIntensity} />
+      <Suspense fallback={
+        <mesh>
+          <boxGeometry args={[2, 2, 2]} />
+          <meshStandardMaterial color="#10b981" />
+        </mesh>
+      }>
+        <RoomModel />
         <LightPipe intensity={isDay ? lightIntensity : 0} />
       </Suspense>
       
-      <ContactShadows position={[0, -2, 0]} opacity={0.4} scale={15} blur={2} />
+      <ContactShadows position={[0, -3, 0]} opacity={0.5} scale={30} blur={2} />
       <OrbitControls 
         enablePan={false} 
         enableZoom={true} 
-        minDistance={4} 
-        maxDistance={12}
+        minDistance={8} 
+        maxDistance={25}
         autoRotate
-        autoRotateSpeed={0.5}
+        autoRotateSpeed={0.3}
+        target={[0, 0, 0]}
       />
     </>
   );
@@ -164,29 +195,29 @@ export default function SandboxPage() {
             {/* Sun Slider */}
             <div className="flex items-center gap-3 mb-2 px-2">
               <span className="text-xl">🌅</span>
-              <div className="flex-1 h-2 bg-gradient-to-r from-orange-200 via-yellow-200 to-orange-200 rounded-full relative">
+              <div className="flex-1 h-3 bg-gradient-to-r from-orange-200 via-yellow-200 to-orange-200 rounded-full relative">
                 <div 
-                  className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-yellow-400 rounded-full shadow-lg border-2 border-yellow-500 flex items-center justify-center text-xs transition-all"
-                  style={{ left: `calc(${sunPosition}% - 10px)` }}
+                  className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400 rounded-full shadow-lg border-2 border-yellow-500 flex items-center justify-center text-sm transition-all"
+                  style={{ left: `calc(${sunPosition}% - 12px)` }}
                 >☀️</div>
               </div>
               <span className="text-xl">🌙</span>
             </div>
 
-            {/* 3D Canvas */}
-            <div className="h-80 rounded-2xl overflow-hidden bg-gradient-to-b from-sky-200 to-sky-100">
-              <Canvas camera={{ position: [6, 4, 6], fov: 45 }} shadows>
+            {/* 3D Canvas - ใหญ่ขึ้น */}
+            <div className="h-96 rounded-2xl overflow-hidden bg-gradient-to-b from-sky-300 to-sky-100">
+              <Canvas camera={{ position: [12, 10, 12], fov: 45 }} shadows>
                 <Scene isDay={isDay} lightIntensity={lightIntensity} />
               </Canvas>
             </div>
             
             {/* Status */}
             <div className="flex justify-between mt-3 text-sm">
-              <div className={`px-3 py-1 rounded-full ${isDay ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-600'}`}>
+              <div className={`px-3 py-1.5 rounded-full font-medium ${isDay ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-600'}`}>
                 <Sun className="w-4 h-4 inline mr-1" />
                 Light Pipe: {(lightIntensity * 100).toFixed(0)}%
               </div>
-              <div className={`px-3 py-1 rounded-full ${lightIntensity < 0.5 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+              <div className={`px-3 py-1.5 rounded-full font-medium ${lightIntensity < 0.5 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
                 💡 LED: {lightIntensity < 0.5 ? "ON" : "OFF"}
               </div>
             </div>
