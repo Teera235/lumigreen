@@ -39,8 +39,8 @@ function RoomModel({ lightIntensity }: { lightIntensity: number }) {
   return (
     <primitive 
       object={obj} 
-      scale={0.02} 
-      position={[0, -1.5, 0]} 
+      scale={0.08} 
+      position={[0, -2, 0]} 
       rotation={[0, Math.PI / 4, 0]}
     />
   );
@@ -48,27 +48,27 @@ function RoomModel({ lightIntensity }: { lightIntensity: number }) {
 
 function LightPipe({ intensity }: { intensity: number }) {
   return (
-    <group position={[0, 2, 0]}>
+    <group position={[0, 3, 0]}>
       {/* Light pipe tube */}
       <mesh>
-        <cylinderGeometry args={[0.3, 0.4, 0.5, 32]} />
+        <cylinderGeometry args={[0.5, 0.6, 0.8, 32]} />
         <meshStandardMaterial color="#e5e7eb" metalness={0.8} roughness={0.2} />
       </mesh>
       {/* Light glow */}
       <pointLight 
         position={[0, -0.5, 0]} 
-        intensity={intensity * 3} 
+        intensity={intensity * 5} 
         color="#fef08a" 
-        distance={5}
+        distance={8}
       />
       {/* Light cone */}
       {intensity > 0.3 && (
-        <mesh position={[0, -1, 0]}>
-          <coneGeometry args={[1.5, 2, 32, 1, true]} />
+        <mesh position={[0, -1.5, 0]}>
+          <coneGeometry args={[2.5, 3, 32, 1, true]} />
           <meshBasicMaterial 
             color="#fef08a" 
             transparent 
-            opacity={intensity * 0.2} 
+            opacity={intensity * 0.25} 
             side={THREE.DoubleSide}
           />
         </mesh>
@@ -93,12 +93,12 @@ function Scene({ isDay, lightIntensity }: { isDay: boolean; lightIntensity: numb
         <LightPipe intensity={isDay ? lightIntensity : 0} />
       </Suspense>
       
-      <ContactShadows position={[0, -1.5, 0]} opacity={0.4} scale={10} blur={2} />
+      <ContactShadows position={[0, -2, 0]} opacity={0.4} scale={15} blur={2} />
       <OrbitControls 
         enablePan={false} 
         enableZoom={true} 
-        minDistance={3} 
-        maxDistance={8}
+        minDistance={4} 
+        maxDistance={12}
         autoRotate
         autoRotateSpeed={0.5}
       />
@@ -174,8 +174,8 @@ export default function SandboxPage() {
             </div>
 
             {/* 3D Canvas */}
-            <div className="h-64 rounded-2xl overflow-hidden bg-gradient-to-b from-sky-200 to-sky-100">
-              <Canvas camera={{ position: [4, 3, 4], fov: 50 }} shadows>
+            <div className="h-80 rounded-2xl overflow-hidden bg-gradient-to-b from-sky-200 to-sky-100">
+              <Canvas camera={{ position: [6, 4, 6], fov: 45 }} shadows>
                 <Scene isDay={isDay} lightIntensity={lightIntensity} />
               </Canvas>
             </div>
